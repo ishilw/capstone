@@ -23,8 +23,20 @@ class CourseService:
             raise NotFoundError(f"course {course_id} not found")
         return course
 
-    def list_catalog(self, actor: User) -> list[Course]:
-        return self._courses.list_with_status([CourseStatus.PUBLISHED])
+    def list_catalog(self, actor: User, search: str | None = None) -> list[Course]:
+        courses = self._courses.list_with_status([CourseStatus.PUBLISHED])
+
+        if not search or not search.strip():
+            return courses
+
+        query = search.strip().casefold()
+
+        return [
+            course
+            for course in courses
+            if query in course.title.casefold()
+            or query in course.description.casefold()
+        ]
 
     def update_course(
         self,

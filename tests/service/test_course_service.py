@@ -79,3 +79,27 @@ def test_admin_can_transition_any_course(env):
     created = service.create_course(users["instructor"], "Intro", "")
     archived = service.transition_course(users["admin"], created.id, CourseStatus.ARCHIVED)
     assert archived.status == CourseStatus.ARCHIVED
+
+def test_catalog_search_matches_title_case_insensitively(env):
+    service, users = env
+    instructor = users["instructor"]
+    learner = users["learner"]
+
+    python_course = service.create_course(
+        instructor, "Python Fundamentals", "Learn programming"
+    )
+    aws_course = service.create_course(
+        instructor, "AWS Essentials", "Cloud computing"
+    )
+
+    service.transition_course(
+        instructor, python_course.id, CourseStatus.PUBLISHED
+    )
+    service.transition_course(
+        instructor, aws_course.id, CourseStatus.PUBLISHED
+    )
+
+    results = service.list_catalog(learner, search="PYTHON")
+
+    assert len(results) == 1
+    assert results[0].title == "Python Fundamentals"

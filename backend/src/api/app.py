@@ -85,8 +85,15 @@ def register_health_route(app: FastAPI) -> None:
 
 def register_course_routes(app: FastAPI) -> None:
     @app.get("/courses", response_model=list[CourseOut])
-    def list_courses(actor: Actor, service: Service) -> list[CourseOut]:
-        return [CourseOut.from_course(c) for c in service.list_catalog(actor)]
+    def list_courses(
+        actor: Actor,
+        service: Service,
+        search: str | None = None,
+    ) -> list[CourseOut]:
+        return [
+            CourseOut.from_course(c)
+            for c in service.list_catalog(actor, search=search)
+        ]
 
     @app.post("/courses", status_code=201, response_model=CourseOut)
     def create_course(payload: CourseCreate, actor: Actor, service: Service) -> CourseOut:

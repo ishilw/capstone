@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react'
 import { ApiError } from '../../../api/http'
 import { makeApi, renderWithApp } from '../../__tests__/renderWithApp'
 import { makeCourse } from '../../__tests__/fixtures'
 import { CatalogPage } from '../CatalogPage'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 
 describe('CatalogPage', () => {
   it('shows a loading status first', () => {
@@ -29,4 +29,49 @@ describe('CatalogPage', () => {
     renderWithApp(<CatalogPage />, { api: makeApi({ courses: { list } }) })
     expect(await screen.findByRole('alert')).toHaveTextContent('unknown user')
   })
+  
+  it('searches courses by keyword', async () => {
+    const list = vi.fn().mockResolvedValue([
+      makeCourse({ title: 'Python Fundamentals' }),
+    ])
+
+    renderWithApp(<CatalogPage />, {
+      api: makeApi({ courses: { list } }),
+    })
+
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'python' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledWith('python')
+    })
+  })
+
+  it('clears the course search', async () => {
+    const list = vi.fn().mockResolvedValue([])
+
+    renderWithApp(<CatalogPage />, {
+      api: makeApi({ courses: { list } }),
+    })
+
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'AWS' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledWith('AWS')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
+
+    await waitFor(() => {
+      expect(list).toHaveBeenLastCalledWith('')
+    })
+
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+  })
+
 })

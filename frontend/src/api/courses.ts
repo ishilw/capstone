@@ -1,3 +1,4 @@
+
 import type { Course, CourseStatus, Enrollment } from '../types/models'
 import type { Http } from './http'
 
@@ -8,7 +9,12 @@ export interface CourseInput {
 
 export function coursesApi(http: Http) {
   return {
-    list: () => http.get<Course[]>('/courses'),
+    list: (search?: string) =>
+      http.get<Course[]>(
+        search?.trim()
+          ? `/courses?search=${encodeURIComponent(search.trim())}`
+          : '/courses'
+      ),
     get: (id: number) => http.get<Course>(`/courses/${id}`),
     create: (input: CourseInput) => http.post<Course>('/courses', input),
     update: (id: number, input: Partial<CourseInput>) =>
